@@ -11,36 +11,44 @@ class Proposal extends Model
 
     protected $fillable = [
         'program_id',
-        'user_id',
+        'created_by',
         'judul',
         'tujuan',
         'status',
-        'alasan_ditolak',
-        'approved_by',
-        'approved_at',
+        'stage',
+
+        'ketua_approved_by',
+        'ketua_approved_at',
+        'bendahara1_approved_by',
+        'bendahara1_approved_at',
+        'bendahara2_approved_by',
+        'bendahara2_approved_at',
+
+        'reject_reason',
+        'rejected_by',
+        'rejected_at',
+        'rejected_stage',
     ];
 
-    /* Proposal milik satu program */
+    protected $casts = [
+        'ketua_approved_at'         => 'datetime',
+        'bendahara1_approved_at'    => 'datetime',
+        'bendahara2_approved_at'    => 'datetime',
+        'rejected_at'               => 'datetime',
+    ];
+
     public function program()
     {
         return $this->belongsTo(Program::class);
     }
 
-    /* User pengaju proposal (Ketua Bidang / Anggota Sie) */
     public function pengaju()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    /* User yang menyetujui / menolak proposal */
-    public function approver()
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    /* Proposal memiliki banyak file PDF */
     public function files()
     {
-        return $this->hasMany(Proposal::class);
+        return $this->hasMany(ProposalFile::class);
     }
 }

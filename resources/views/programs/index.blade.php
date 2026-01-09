@@ -8,20 +8,15 @@
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            {{-- Flash Success --}}
-            @if (session('success'))
-                <div class="rounded-lg bg-green-100 text-green-800 px-4 py-3 shadow">
-                    {{ session('success') }}
-                </div>
-            @endif
-
             {{-- Create Button --}}
-            <div>
-                <a href="{{ route('programs.create') }}"
-                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                    + Buat Program
-                </a>
-            </div>
+            @can('create', \App\Models\Program::class)
+                <div>
+                    <a href="{{ route('programs.create') }}"
+                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        + Buat Program
+                    </a>
+                </div>
+            @endcan
 
             {{-- Program List --}}
             <div class="bg-white shadow sm:rounded-lg p-6">
@@ -74,16 +69,20 @@
 
                                         <td class="px-4 py-3">
                                             <div class="flex gap-2 justify-center">
-                                                <a href="{{ route('programs.show', $program) }}"
-                                                class="px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-800">
-                                                    Detail
-                                                </a>
+                                                @can('view', $program)
+                                                    <a href="{{ route('programs.show', $program) }}"
+                                                    class="px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-800">
+                                                        Detail
+                                                    </a>
+                                                @endcan
 
-                                                <button
-                                                    onclick="confirmDelete({{ $program->id }})"
-                                                    class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">
-                                                    Hapus
-                                                </button>
+                                                @can('delete', $program)
+                                                    <button
+                                                        onclick="confirmDelete({{ $program->id }})"
+                                                        class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">
+                                                        Hapus
+                                                    </button>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
@@ -98,39 +97,41 @@
     </div>
 
     <script>
+        const destroyUrlTemplate = "{{ route('programs.destroy', ':id') }}";
+
         function confirmDelete(id) {
-        Swal.fire({
-            title: 'Hapus Program?',
-            text: 'Program yang dihapus tidak bisa dikembalikan.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#e3342f',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, hapus',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                let form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/programs/' + id;
+            Swal.fire({
+                title: 'Hapus Program?',
+                text: 'Program yang dihapus tidak bisa dikembalikan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e3342f',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = destroyUrlTemplate.replace(':id', id);
 
-                let csrf = document.createElement('input');
-                csrf.type = 'hidden';
-                csrf.name = '_token';
-                csrf.value = '{{ csrf_token() }}';
+                    let csrf = document.createElement('input');
+                    csrf.type = 'hidden';
+                    csrf.name = '_token';
+                    csrf.value = '{{ csrf_token() }}';
 
-                let method = document.createElement('input');
-                method.type = 'hidden';
-                method.name = '_method';
-                method.value = 'DELETE';
+                    let method = document.createElement('input');
+                    method.type = 'hidden';
+                    method.name = '_method';
+                    method.value = 'DELETE';
 
-                form.appendChild(csrf);
-                form.appendChild(method);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
+                    form.appendChild(csrf);
+                    form.appendChild(method);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
     </script>
 
 </x-app-layout>

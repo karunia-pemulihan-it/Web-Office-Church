@@ -291,6 +291,42 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // PROGRAM
     // ======================================================================
 
+
+    // ======================================================================
+    // PROPOSAL
+    // ======================================================================
+
+    Route::middleware(['role:tim_bidang|tim_inti|super_admin'])->scopeBindings()->group(function() {
+
+        Route::get('/programs/{program}/proposals/create', [ProposalController::class, 'create'])
+            ->name('programs.proposals.create');
+
+        Route::post('/programs/{program}/proposals', [ProposalController::class, 'store'])
+            ->name('programs.proposals.store');
+
+        // tim_bidang edit/update/hapus proposal (opsi B)
+        Route::get('/programs/{program}/proposals/{proposal}/edit', [ProposalController::class, 'edit'])
+            ->name('programs.proposals.edit');
+
+        Route::put('/programs/{program}/proposals/{proposal}', [ProposalController::class, 'update'])
+            ->name('programs.proposals.update');
+
+        Route::delete('/programs/{program}/proposals/{proposal}', [ProposalController::class, 'destroy'])
+            ->name('programs.proposals.destroy');
+
+        // tim_inti approve/reject
+        Route::patch('/programs/{program}/proposals/{proposal}/approve', [ProposalController::class, 'approve'])
+            ->name('programs.proposals.approve');
+
+        Route::patch('/programs/{program}/proposals/{proposal}/reject', [ProposalController::class, 'reject'])
+            ->name('programs.proposals.reject');
+
+    });
+
+    // ======================================================================
+    // PROPOSAL
+    // ======================================================================
+
 });
 
 require __DIR__.'/auth.php';

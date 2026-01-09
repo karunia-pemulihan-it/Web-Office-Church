@@ -7,9 +7,20 @@ use App\Models\User;
 
 class ProgramPolicy
 {
+    private function jabatanKey(User $user): string
+    {
+        $jabatan = strtolower(trim($user->jabatan ?? ''));
+        $jabatan = str_replace([' ', '-'], '_', $jabatan);
+        return $jabatan; // contoh: "bendahara 2" => "bendahara_2"
+    }
+
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['tim_inti', 'tim_bidang', 'super_admin']);
+        if ($user->hasAnyRole(['super_admin', 'tim_inti'])) {
+            return true;
+        }
+
+        return $user->hasRole('tim_bidang') && $user->bidang_id !== null;
     }
 
     public function view(User $user, Program $program): bool
@@ -45,17 +56,16 @@ class ProgramPolicy
         return $user->hasRole('tim_bidang')
             && $program->status === 'draft'
             && $program->created_by === $user->id
-            && $program->proposals()->count() === 0;
+            && ! $program->proposals()->exists();
     }
 
     public function changeStatus(User $user, Program $program): bool
     {
-        // super_admin full authority
         if ($user->hasRole('super_admin')) {
             return true;
         }
 
-        // hanya ketua (jabatan) dari tim_inti yang boleh ubah status program
-        return $user->hasRole('tim_inti') && $user->jabatan === 'ketua';
+        // ketua tim_inti boleh ubah status program
+        return $user->hasRole('tim_inti') && $this->jabatanKey($user) === 'ketua';
     }
 }

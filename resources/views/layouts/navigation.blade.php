@@ -1,5 +1,5 @@
 <nav class="fixed inset-y-0 left-0 w-64 bg-white border-r shadow-lg min-h-screen overflow-y-auto">
-    
+
     {{-- Logo --}}
     <div class="px-6 py-5 border-b">
         <h1 class="text-xl font-semibold text-gray-700">WEB OFFICE</h1>
@@ -44,6 +44,16 @@
             {{ request()->routeIs('bidangs.*') || request()->routeIs('sies.*') ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
             <i class="fas fa-sitemap mr-3"></i> CRUD Bidang & Sie
         </a>
+
+        {{-- Programs --}}
+        @can('viewAny', \App\Models\Program::class)
+        <a href="{{ route('programs.index') }}"
+            class="flex items-center px-6 py-3 text-sm font-medium
+            {{ request()->routeIs('programs.*') ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
+            <i class="fas fa-tasks mr-3"></i> Programs
+        </a>
+        @endcan
+        {{-- End --}}
 
         {{-- User Pending --}}
         @can('user.approve_registration')

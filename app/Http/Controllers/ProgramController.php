@@ -57,13 +57,13 @@ class ProgramController extends Controller
         ]);
 
         return redirect()
-            ->route('programs.show', $program)
-            ->with('success', 'Program berhasil dibuat');
+            ->route('programs.index', $program)
+            ->with('status', 'Program berhasil dibuat');
     }
 
     public function show(Program $program)
     {
-        $program->load('proposals');
+        $program->load(['proposals.files']);
         return view('programs.show', compact('program'));
     }
 
@@ -73,7 +73,7 @@ class ProgramController extends Controller
         $program->delete();
         return redirect()
         ->route('programs.index')
-        ->with('success', 'Program berhasil dihapus');
+        ->with('status', 'Program berhasil dihapus');
     }
 
     /* Edit Program */
@@ -94,7 +94,7 @@ class ProgramController extends Controller
 
         $program->update($validated);
 
-        return redirect()->route('programs.show', $program)->with('success', 'Program berhasil diperbarui');
+        return redirect()->route('programs.show', $program)->with('status', 'Program berhasil diperbarui');
     }
 
     public function changeStatus(Request $request, Program $program)
@@ -105,12 +105,38 @@ class ProgramController extends Controller
             'status' => 'required|in:draft,berjalan,selesai',
         ]);
 
+        $current = $program->status;
+        $target = $request->status;
+
+        // Aturan transisi tidak boleh lompat
+        $allowed = match ($current) {
+            'draft'     => ['draft', 'berjalan'],
+            'berjalan'  => ['berjalan', 'selesai'],
+            'selesai'   => ['selesai'],
+            default     => [$current],
+        };
+
+        if(! in_array($target, $allowed, true)) {
+            return back()->with('error', 'Transisi status tidak di-izinkan.');
+        }
+
+        // Draft -> Berjalan, hanya boleh jika ada minimal 1 proposal final diterima
+        if ($current === 'draft' && $target === 'berjalan') {
+            $hasFinalApprovedProposal = $program->proposals()
+            ->where('status', 'diterima')
+            ->exists();
+
+            if (! $hasFinalApprovedProposal) {
+                return back()->with('error', 'Belum ada proposal final yang disetujui');
+            }
+        }
+
         $program->update([
             'status' => $request->status,
         ]);
 
         return redirect()
             ->route('programs.show', $program)
-            ->with('success', 'Status program berhasil diubah');
+            ->with('status', 'Status program berhasil diubah');
     }
 }
